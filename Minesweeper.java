@@ -12,11 +12,16 @@ import javafx.scene.control.Label;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.input.MouseButton;
 import javafx.geometry.Pos;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.value.ObservableValue;
+import javafx.beans.value.ChangeListener;
 
 public class Minesweeper extends Application {
     private static Grid grid;
     private static Box[][] minefield;
     private boolean lost;
+    private boolean won;
+    private SimpleIntegerProperty bombsLeft;
 
     public void start(Stage stage) throws Exception {
         // set name of window
@@ -24,6 +29,8 @@ public class Minesweeper extends Application {
 
         // initialize instance variables, including population of grid
         lost = false;
+        won = false;
+        bombsLeft = new SimpleIntegerProperty(99);
         grid = new Grid();
         grid.populate();
 
@@ -48,11 +55,18 @@ public class Minesweeper extends Application {
         g.getChildren().add(restart);
 
         // create the flag counter in the top left
-        Label bombCount = new Label("99");
+        Label bombCount = new Label();
         bombCount.setPrefHeight(56);
         bombCount.setPrefWidth(121);
         bombCount.setLayoutX(10);
         bombCount.setLayoutY(10);
+        bombCount.setText(bombsLeft.asString().get());
+        bombsLeft.addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number t1) {
+                bombCount.setText(bombsLeft.asString().get());
+            }
+        });
         g.getChildren().add(bombCount);
 
         // set the scene and show the stage to the user
@@ -78,7 +92,8 @@ public class Minesweeper extends Application {
                 l.setOnMouseClicked(event ->
                 {
                     // if left click and the game is not over
-                    if (event.getButton() == MouseButton.PRIMARY && !lost) {
+                    if (event.getButton() == MouseButton.PRIMARY && !lost && !won) {
+                        int revealCount = 0;
                         box.setRevealed(true);
                         // if clicked box has no mines adjacent, reveal
                         if (box.getNumMines() == 0 && !box.isMine()) {
@@ -90,8 +105,14 @@ public class Minesweeper extends Application {
                             for (int y = 0; y < grid.getLength(); y++) {
                                 Box curr = minefield[x][y];
                                 if (curr.isRevealed()) {
+                                    revealCount++;
                                     curr.getLabel().setStyle("-fx-background-color: #A6A39E");
                                     curr.getLabel().setAlignment(Pos.CENTER);
+                                    if (curr.isFlagged()) {
+                                        curr.setFlagged(false);
+                                        bombsLeft.setValue(bombsLeft.getValue() + 1);
+                                        System.out.println("bombs left: " + bombsLeft);
+                                    }
                                     if (curr.isMine()) {
                                         // if revealed is a mine, lose
                                         curr.getLabel().setStyle("-fx-background-color: black");
@@ -122,14 +143,21 @@ public class Minesweeper extends Application {
                                 }
                             }
                         }
+                        if (revealCount == 381) {
+                            won = true;
+                            l.setStyle("-fx-background-color: green");
+                        }
+
                     // if right click on a valid box, either add or remove a flag
-                    } else if (event.getButton() == MouseButton.SECONDARY && !box.isRevealed() && !lost) {
+                    } else if (event.getButton() == MouseButton.SECONDARY && !box.isRevealed() && !lost && !won) {
                         if (box.isFlagged()) {
                             box.setFlagged(false);
                             l.setStyle("-fx-background-color: #BAB6B2");
+                            bombsLeft.setValue(bombsLeft.getValue() + 1);
                         } else {
                             box.setFlagged(true);
                             l.setStyle("-fx-background-color: red");
+                            bombsLeft.setValue(bombsLeft.getValue() - 1);
                         }
                     }
                 });
