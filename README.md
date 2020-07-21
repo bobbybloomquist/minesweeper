@@ -1,4 +1,4 @@
-# CS2340 Space Trader Project
+# Minesweeper
 
 ## Built With
 * [Java](https://www.java.com/en/) - The programming language used
