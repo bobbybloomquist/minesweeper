@@ -15,12 +15,15 @@ import javafx.geometry.Pos;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.beans.value.ChangeListener;
+import java.util.*;
 
 public class Minesweeper extends Application {
     private static Grid grid;
     private static Box[][] minefield;
+    private ArrayList<Box> toReveal;
     private boolean lost;
     private boolean won;
+    private int revealCount;
     private SimpleIntegerProperty bombsLeft;
 
     public void start(Stage stage) throws Exception {
@@ -30,9 +33,11 @@ public class Minesweeper extends Application {
         // initialize instance variables, including population of grid
         lost = false;
         won = false;
+        revealCount = 0;
         bombsLeft = new SimpleIntegerProperty(99);
         grid = new Grid();
         grid.populate();
+        toReveal = new ArrayList();
 
         // create group of labels that make up the interactive minesweeper game
         Group g = play(grid);
@@ -93,53 +98,59 @@ public class Minesweeper extends Application {
                 {
                     // if left click and the game is not over
                     if (event.getButton() == MouseButton.PRIMARY && !lost && !won) {
-                        int revealCount = 0;
+                        toReveal.add(box);
                         box.setRevealed(true);
                         // if clicked box has no mines adjacent, reveal
                         if (box.getNumMines() == 0 && !box.isMine()) {
                             reveal(box.getRow(), box.getCol());
                         }
 
-                        // iterate through grid for revealed boxes and reveal them
-                        for (int x = 0; x < grid.getWidth(); x++) {
-                            for (int y = 0; y < grid.getLength(); y++) {
-                                Box curr = minefield[x][y];
-                                if (curr.isRevealed()) {
-                                    revealCount++;
-                                    curr.getLabel().setStyle("-fx-background-color: #A6A39E");
-                                    curr.getLabel().setAlignment(Pos.CENTER);
-                                    if (curr.isFlagged()) {
-                                        curr.setFlagged(false);
-                                        bombsLeft.setValue(bombsLeft.getValue() + 1);
-                                        System.out.println("bombs left: " + bombsLeft);
-                                    }
-                                    if (curr.isMine()) {
-                                        // if revealed is a mine, lose
-                                        curr.getLabel().setStyle("-fx-background-color: black");
-                                        lost = true;
-                                    } else if (curr.getNumMines() == 0) {
-                                        // if revealed has no adjacent mines, have a blank label
-                                        curr.getLabel().setText(" ");
-                                    } else {
-                                        // if revealed has a nonzero number of adjacent mines, adjust the color and number of
-                                        // the label accordingly
-                                        curr.getLabel().setText("" + curr.getNumMines());
-                                        if (curr.getNumMines() == 1) {
-                                            curr.getLabel().setStyle("-fx-text-fill: blue; -fx-background-color: #A6A39E");
-                                        } else if(curr.getNumMines() == 2) {
-                                            curr.getLabel().setStyle("-fx-text-fill: green; -fx-background-color: #A6A39E");
-                                        } else if(curr.getNumMines() == 3) {
-                                            curr.getLabel().setStyle("-fx-text-fill: red; -fx-background-color: #A6A39E");
-                                        } else if (curr.getNumMines() == 4) {
-                                            curr.getLabel().setStyle("-fx-text-fill: purple; -fx-background-color: #A6A39E");
-                                        } else if (curr.getNumMines() == 5) {
-                                            curr.getLabel().setStyle("-fx-text-fill: maroon; -fx-background-color: #A6A39E");
-                                        } else if (curr.getNumMines() == 6) {
-                                            curr.getLabel().setStyle("-fx-text-fill: turquoise; -fx-background-color: #A6A39E");
-                                        } else if (curr.getNumMines() == 8) {
-                                            curr.getLabel().setStyle("-fx-text-fill: gray; -fx-background-color: #A6A39E");
+                        // iterate through toReveal list and reveal them
+                        for (int k = toReveal.size() - 1; k >= 0; k--) {
+                            Box curr = minefield[toReveal.get(k).getRow()][toReveal.get(k).getCol()];
+                            toReveal.remove(k);
+                            revealCount++;
+                            curr.getLabel().setStyle("-fx-background-color: #A6A39E");
+                            curr.getLabel().setAlignment(Pos.CENTER);
+                            if (curr.isFlagged()) {
+                                curr.setFlagged(false);
+                                bombsLeft.setValue(bombsLeft.getValue() + 1);
+                            }
+                            if (curr.isMine()) {
+                                // if revealed is a mine, lose
+                                curr.getLabel().setStyle("-fx-background-color: black");
+                                lost = true;
+                                // iterate through the grid and show all bombs
+                                for (int x = 0; x < grid.getWidth(); x++) {
+                                    for (int y = 0; y < grid.getLength(); y++) {
+                                        Box mine = minefield[x][y];
+                                        if (mine.isMine()) {
+                                            mine.getLabel().setStyle("-fx-background-color: black");
                                         }
                                     }
+                                }
+                                break;
+                            } else if (curr.getNumMines() == 0) {
+                                // if revealed has no adjacent mines, have a blank label
+                                curr.getLabel().setText(" ");
+                            } else {
+                                // if revealed has a nonzero number of adjacent mines, adjust the color and number of
+                                // the label accordingly
+                                curr.getLabel().setText("" + curr.getNumMines());
+                                if (curr.getNumMines() == 1) {
+                                    curr.getLabel().setStyle("-fx-text-fill: blue; -fx-background-color: #A6A39E");
+                                } else if(curr.getNumMines() == 2) {
+                                    curr.getLabel().setStyle("-fx-text-fill: green; -fx-background-color: #A6A39E");
+                                } else if(curr.getNumMines() == 3) {
+                                    curr.getLabel().setStyle("-fx-text-fill: red; -fx-background-color: #A6A39E");
+                                } else if (curr.getNumMines() == 4) {
+                                    curr.getLabel().setStyle("-fx-text-fill: purple; -fx-background-color: #A6A39E");
+                                } else if (curr.getNumMines() == 5) {
+                                    curr.getLabel().setStyle("-fx-text-fill: maroon; -fx-background-color: #A6A39E");
+                                } else if (curr.getNumMines() == 6) {
+                                    curr.getLabel().setStyle("-fx-text-fill: turquoise; -fx-background-color: #A6A39E");
+                                } else if (curr.getNumMines() == 8) {
+                                    curr.getLabel().setStyle("-fx-text-fill: gray; -fx-background-color: #A6A39E");
                                 }
                             }
                         }
@@ -169,6 +180,7 @@ public class Minesweeper extends Application {
 
     private void reveal(int i, int j) {
         // reveal box indicated by parameters
+        toReveal.add(minefield[i][j]);
         minefield[i][j].setRevealed(true);
         for (int x = -1; x < 2; x++) {
             for (int y = -1; y < 2; y++) {
@@ -178,6 +190,7 @@ public class Minesweeper extends Application {
                     if (adj != null && adj.getNumMines() == 0 && !adj.isMine() && !adj.isRevealed()) {
                         reveal(i + x, j + y);
                     }
+                    toReveal.add(minefield[i + x][j + y]);
                     minefield[i + x][j + y].setRevealed(true);
                 }
             }
