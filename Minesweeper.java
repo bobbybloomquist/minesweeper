@@ -110,6 +110,7 @@ public class Minesweeper extends Application {
                             Box curr = minefield[toReveal.get(k).getRow()][toReveal.get(k).getCol()];
                             toReveal.remove(k);
                             revealCount++;
+                            System.out.println(revealCount);
                             curr.getLabel().setStyle("-fx-background-color: #A6A39E");
                             curr.getLabel().setAlignment(Pos.CENTER);
                             if (curr.isFlagged()) {
@@ -180,8 +181,10 @@ public class Minesweeper extends Application {
 
     private void reveal(int i, int j) {
         // reveal box indicated by parameters
-        toReveal.add(minefield[i][j]);
-        minefield[i][j].setRevealed(true);
+        if (!minefield[i][j].isRevealed()) {
+            toReveal.add(minefield[i][j]);
+            minefield[i][j].setRevealed(true);
+        }
         for (int x = -1; x < 2; x++) {
             for (int y = -1; y < 2; y++) {
                 // if inbounds, recursively reveal if number of mines is 0
@@ -190,8 +193,11 @@ public class Minesweeper extends Application {
                     if (adj != null && adj.getNumMines() == 0 && !adj.isMine() && !adj.isRevealed()) {
                         reveal(i + x, j + y);
                     }
-                    toReveal.add(minefield[i + x][j + y]);
-                    minefield[i + x][j + y].setRevealed(true);
+                    if (!minefield[i + x][j + y].isRevealed()) {
+                        System.out.println("this is not useless");
+                        toReveal.add(minefield[i + x][j + y]);
+                        minefield[i + x][j + y].setRevealed(true);
+                    }
                 }
             }
         }
