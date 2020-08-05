@@ -98,8 +98,10 @@ public class Minesweeper extends Application {
                 {
                     // if left click and the game is not over
                     if (event.getButton() == MouseButton.PRIMARY && !lost && !won) {
-                        toReveal.add(box);
-                        box.setRevealed(true);
+                        if (!box.isRevealed()) {
+                            toReveal.add(box);
+                            box.setRevealed(true);
+                        }
                         // if clicked box has no mines adjacent, reveal
                         if (box.getNumMines() == 0 && !box.isMine()) {
                             reveal(box.getRow(), box.getCol());
@@ -110,7 +112,6 @@ public class Minesweeper extends Application {
                             Box curr = minefield[toReveal.get(k).getRow()][toReveal.get(k).getCol()];
                             toReveal.remove(k);
                             revealCount++;
-                            System.out.println(revealCount);
                             curr.getLabel().setStyle("-fx-background-color: #A6A39E");
                             curr.getLabel().setAlignment(Pos.CENTER);
                             if (curr.isFlagged()) {
@@ -119,6 +120,7 @@ public class Minesweeper extends Application {
                             }
                             if (curr.isMine()) {
                                 // if revealed is a mine, lose
+                                revealCount--;
                                 curr.getLabel().setStyle("-fx-background-color: black");
                                 lost = true;
                                 // iterate through the grid and show all bombs
@@ -194,7 +196,6 @@ public class Minesweeper extends Application {
                         reveal(i + x, j + y);
                     }
                     if (!minefield[i + x][j + y].isRevealed()) {
-                        System.out.println("this is not useless");
                         toReveal.add(minefield[i + x][j + y]);
                         minefield[i + x][j + y].setRevealed(true);
                     }
