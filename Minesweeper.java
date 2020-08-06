@@ -4,6 +4,7 @@ import javafx.stage.Stage;
 import javafx.scene.Scene;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
+import javafx.scene.text.Font;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.Group;
@@ -128,7 +129,16 @@ public class Minesweeper extends Application {
                                     for (int y = 0; y < grid.getLength(); y++) {
                                         Box mine = minefield[x][y];
                                         if (mine.isMine()) {
-                                            mine.getLabel().setStyle("-fx-background-color: black");
+                                            if (!mine.isFlagged()) {
+                                                mine.getLabel().setStyle("-fx-background-color: black");
+                                            }
+                                        }
+                                        else if (mine.isFlagged()) {
+                                            if (!mine.isMine()) {
+                                                mine.getLabel().setFont(new Font("Arial", 24));
+                                                mine.getLabel().setText("X");
+                                                mine.getLabel().setAlignment(Pos.CENTER);
+                                            }
                                         }
                                     }
                                 }
