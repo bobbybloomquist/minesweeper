@@ -205,7 +205,7 @@ public class Minesweeper extends Application {
                     if (adj != null && adj.getNumMines() == 0 && !adj.isMine() && !adj.isRevealed()) {
                         reveal(i + x, j + y);
                     }
-                    if (!minefield[i + x][j + y].isRevealed()) {
+                    if (!minefield[i + x][j + y].isRevealed() && !minefield[i + x][j + y].isFlagged()) {
                         toReveal.add(minefield[i + x][j + y]);
                         minefield[i + x][j + y].setRevealed(true);
                     }
