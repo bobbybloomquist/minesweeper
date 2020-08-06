@@ -135,7 +135,7 @@ public class Minesweeper extends Application {
                                         }
                                         else if (mine.isFlagged()) {
                                             if (!mine.isMine()) {
-                                                mine.getLabel().setFont(new Font("Arial", 24));
+                                                mine.getLabel().setFont(new Font("Arial", 20));
                                                 mine.getLabel().setText("X");
                                                 mine.getLabel().setAlignment(Pos.CENTER);
                                             }
