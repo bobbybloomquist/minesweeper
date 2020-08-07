@@ -19,13 +19,14 @@ import javafx.beans.value.ChangeListener;
 import java.util.*;
 
 public class Minesweeper extends Application {
-    private static Grid grid;
+    private static Grid masterGrid;
     private static Box[][] minefield;
     private ArrayList<Box> toReveal;
     private boolean lost;
     private boolean won;
     private int revealCount;
     private SimpleIntegerProperty bombsLeft;
+    private boolean firstClick;
 
     public void start(Stage stage) throws Exception {
         // set name of window
@@ -36,12 +37,13 @@ public class Minesweeper extends Application {
         won = false;
         revealCount = 0;
         bombsLeft = new SimpleIntegerProperty(99);
-        grid = new Grid();
-        grid.populate();
+        masterGrid = new Grid();
+        masterGrid.populate();
         toReveal = new ArrayList();
+        firstClick = false;
 
         // create group of labels that make up the interactive minesweeper game
-        Group g = play(grid);
+        Group g = play(masterGrid, stage);
 
         // create the restart button
         Button restart = new Button("Play Again");
@@ -52,7 +54,7 @@ public class Minesweeper extends Application {
         restart.setOnMouseClicked(event ->
         {
             try {
-                lost = false;
+
                 start(stage);
             } catch(Exception e) {
 
@@ -81,8 +83,9 @@ public class Minesweeper extends Application {
         stage.show();
     }
 
-    private Group play(Grid grid) {
+    private Group play(Grid grid, Stage stage) {
         Group g = new Group();
+        masterGrid = grid;
         minefield = grid.getMinefield();
         // loop through the grid
         for (int i = 0; i < grid.getWidth(); i++) {
@@ -95,8 +98,27 @@ public class Minesweeper extends Application {
                 l.setLayoutY(i * 27 + 75);
                 l.setPrefHeight(25);
                 l.setPrefWidth(25);
+                l.setOnMouseEntered(event ->
+                {
+                    if (!firstClick && (box.getNumMines() != 0 || box.isMine())) {
+                        Box searching = box;
+                        Grid temp = new Grid();
+                        while (searching.getNumMines() != 0 || searching.isMine()) {
+                            temp.clear();
+                            temp.populate();
+                            searching = temp.getMinefield()[searching.getRow()][searching.getCol()];
+                        }
+                        // after the while, firstClick is guaranteed to have no adjacent mines
+                        try {
+                            start(stage);
+                        } catch(Exception e) {
+
+                        }
+                    }
+                });
                 l.setOnMouseClicked(event ->
                 {
+                    firstClick = true;
                     // if left click and the game is not over
                     if (event.getButton() == MouseButton.PRIMARY && !lost && !won) {
                         if (!box.isRevealed()) {
@@ -107,7 +129,6 @@ public class Minesweeper extends Application {
                         if (box.getNumMines() == 0 && !box.isMine()) {
                             reveal(box.getRow(), box.getCol());
                         }
-
                         // iterate through toReveal list and reveal them
                         for (int k = toReveal.size() - 1; k >= 0; k--) {
                             Box curr = minefield[toReveal.get(k).getRow()][toReveal.get(k).getCol()];
@@ -125,15 +146,14 @@ public class Minesweeper extends Application {
                                 curr.getLabel().setStyle("-fx-background-color: black");
                                 lost = true;
                                 // iterate through the grid and show all bombs
-                                for (int x = 0; x < grid.getWidth(); x++) {
-                                    for (int y = 0; y < grid.getLength(); y++) {
+                                for (int x = 0; x < masterGrid.getWidth(); x++) {
+                                    for (int y = 0; y < masterGrid.getLength(); y++) {
                                         Box mine = minefield[x][y];
                                         if (mine.isMine()) {
                                             if (!mine.isFlagged()) {
                                                 mine.getLabel().setStyle("-fx-background-color: black");
                                             }
-                                        }
-                                        else if (mine.isFlagged()) {
+                                        } else if (mine.isFlagged()) {
                                             if (!mine.isMine()) {
                                                 mine.getLabel().setFont(new Font("Arial", 20));
                                                 mine.getLabel().setText("X");
@@ -200,7 +220,7 @@ public class Minesweeper extends Application {
         for (int x = -1; x < 2; x++) {
             for (int y = -1; y < 2; y++) {
                 // if inbounds, recursively reveal if number of mines is 0
-                if (i + x < grid.getWidth() && i + x >= 0 && j + y < grid.getLength() && j + y >= 0) {
+                if (i + x < masterGrid.getWidth() && i + x >= 0 && j + y < masterGrid.getLength() && j + y >= 0) {
                     Box adj = minefield[i + x][j + y];
                     if (adj != null && adj.getNumMines() == 0 && !adj.isMine() && !adj.isRevealed()) {
                         reveal(i + x, j + y);

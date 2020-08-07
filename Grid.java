@@ -27,6 +27,10 @@ public class Grid {
         return bombs;
     }
 
+    public void clear() {
+        minefield = new Box[width][length];
+    }
+
     public void populate() {
         // insert all the bombs
         for (int i = 0; i < bombs; i++) {

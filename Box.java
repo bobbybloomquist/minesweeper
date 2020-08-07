@@ -10,7 +10,7 @@ public class Box {
     private Label label;
 
     public Box(boolean isMine, int r, int c) {
-        this.isMine = isMine;
+        this.isMine = isMine;    
         numMines = 0;
         isFlagged = false;
         isRevealed = false;
