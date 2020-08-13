@@ -120,7 +120,7 @@ public class Minesweeper extends Application {
                 {
                     firstClick = true;
                     // if left click and the game is not over
-                    if (event.getButton() == MouseButton.PRIMARY && !lost && !won) {
+                    if (event.getButton() == MouseButton.PRIMARY && !lost && !won && !box.isFlagged()) {
                         if (!box.isRevealed()) {
                             toReveal.add(box);
                             box.setRevealed(true);
